@@ -40,8 +40,8 @@ app.get('/mahlzeiten', async (c) => {
   return c.html(MahlzeitenPage({ meals }));
 });
 
-// Add meal handler
-app.post('/add-meal', async (c) => {
+// POST /meals - Create a new meal
+app.post('/meals', async (c) => {
   const db = new Database(c.env.DB);
   
   try {
@@ -88,8 +88,8 @@ app.post('/add-meal', async (c) => {
   }
 });
 
-// Add food handler
-app.post('/add-food', async (c) => {
+// POST /foods - Create a new food
+app.post('/foods', async (c) => {
   const db = new Database(c.env.DB);
   
   try {
@@ -111,8 +111,8 @@ app.post('/add-food', async (c) => {
   }
 });
 
-// Edit food handler
-app.post('/edit-food/:id', async (c) => {
+// PUT /foods/:id - Update an existing food
+app.put('/foods/:id', async (c) => {
   const db = new Database(c.env.DB);
   
   try {
@@ -135,8 +135,8 @@ app.post('/edit-food/:id', async (c) => {
   }
 });
 
-// Delete food handler
-app.delete('/delete-food/:id', async (c) => {
+// DELETE /foods/:id - Delete a food
+app.delete('/foods/:id', async (c) => {
   const db = new Database(c.env.DB);
   
   try {
