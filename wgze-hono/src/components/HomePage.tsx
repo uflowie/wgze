@@ -16,8 +16,9 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
             <form 
               hx-post="/meals" 
               hx-target="#message" 
+              hx-target-400="#message"
+              hx-target-500="#message"
               hx-swap="innerHTML" 
-              hx-target-error="#message"
               hx-on="htmx:afterRequest: if(event.detail.successful) this.reset()" 
               class="space-y-4"
             >

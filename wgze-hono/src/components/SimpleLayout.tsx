@@ -1,12 +1,11 @@
 import type { Child } from 'hono/jsx';
-import { Navigation } from './Navigation';
 
-interface LayoutProps {
+interface SimpleLayoutProps {
   title: string;
   children: Child;
 }
 
-export const Layout = ({ title, children }: LayoutProps) => {
+export const SimpleLayout = ({ title, children }: SimpleLayoutProps) => {
   return (
     <html lang="en">
       <head>
@@ -18,7 +17,6 @@ export const Layout = ({ title, children }: LayoutProps) => {
         <script src="https://cdn.tailwindcss.com"></script>
       </head>
       <body class="bg-gray-100 min-h-screen" hx-ext="response-targets">
-        <Navigation />
         {children}
       </body>
     </html>

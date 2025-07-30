@@ -22,6 +22,8 @@ export interface FoodWithLastMeal extends Food {
 // Cloudflare bindings
 export interface Bindings {
   DB: D1Database;
+  AUTH_PASSWORD: string;
+  JWT_SECRET: string;
 }
 
 // Form data interfaces
