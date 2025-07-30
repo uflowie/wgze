@@ -1,5 +1,3 @@
-/** @jsx jsx */
-import { jsx } from 'hono/jsx';
 import { Layout } from './Layout';
 import type { Meal } from '../types';
 

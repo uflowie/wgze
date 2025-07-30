@@ -1,5 +1,3 @@
-/** @jsx jsx */
-import { jsx } from 'hono/jsx';
 import type { FoodWithLastMeal } from '../types';
 
 interface FoodListProps {
@@ -56,7 +54,7 @@ export const FoodList = ({ foods }: FoodListProps) => {
                 </button>
                 <button 
                   class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium" 
-                  hx-delete={`/delete-food/${food.id}`}
+                  hx-delete={`/foods/${food.id}`}
                   hx-target="#food-list" 
                   hx-swap="innerHTML"
                   hx-confirm="Sind Sie sicher, dass Sie diese Speise löschen möchten? Alle zugehörigen Mahlzeiten werden ebenfalls gelöscht!"
@@ -68,7 +66,7 @@ export const FoodList = ({ foods }: FoodListProps) => {
           </div>
           
           <div class="food-edit hidden">
-            <form hx-post={`/edit-food/${food.id}`} hx-target="#food-list" hx-swap="innerHTML" class="space-y-4">
+            <form hx-put={`/foods/${food.id}`} hx-target="#food-list" hx-swap="innerHTML" class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Name der Speise:</label>
                 <input 

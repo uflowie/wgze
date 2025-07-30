@@ -1,6 +1,3 @@
-/** @jsx jsx */
-import { jsx } from 'hono/jsx';
-
 // Navigation component - converted from Go template nav.html
 
 export const Navigation = () => {

@@ -1,5 +1,3 @@
-/** @jsx jsx */
-import { jsx } from 'hono/jsx';
 import { Layout } from './Layout';
 
 interface HomePageProps {
@@ -16,7 +14,7 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
 
           <div class="max-w-md mx-auto">
             <form 
-              hx-post="/add-meal" 
+              hx-post="/meals" 
               hx-target="#message" 
               hx-swap="innerHTML" 
               hx-target-error="#message"

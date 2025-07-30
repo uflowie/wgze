@@ -1,5 +1,3 @@
-/** @jsx jsx */
-import { jsx } from 'hono/jsx';
 import type { Child } from 'hono/jsx';
 import { Navigation } from './Navigation';
 
