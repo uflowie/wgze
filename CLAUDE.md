@@ -6,128 +6,179 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 WGZE is a German food tracking web application that helps users manage their cooking repertoire and track meal consumption. The name stands for "Was gab es zuletzt essen" (What did we eat lately).
 
+**Current Status**: The project has been migrated from Go to **Hono (TypeScript)** with **JSX templates** and **Cloudflare D1** database.
+
 ## Development Commands
 
 ### Running the Application
 ```bash
-# Development (rebuilds on each run)
-go run main.go
+# Development server with hot reloading
+cd wgze-hono
+npm run dev
 
-# Production (build once, run executable)
-go build -o wgze.exe main.go
-.\wgze.exe
+# Deploy to Cloudflare Workers
+npm run deploy
+
+# Generate TypeScript types for Cloudflare bindings
+npm run cf-typegen
 ```
 
-The server runs on `http://localhost:8082` by default and binds to `127.0.0.1` for security.
-
 ### Database Management
-- SQLite database file: `food_tracker.db` (auto-created on first run)
-- No separate migration commands - migrations run automatically on startup
-- Foreign key constraints are enabled via `PRAGMA foreign_keys = ON`
+```bash
+# Initialize local D1 database (first time setup)
+wrangler d1 execute wgze-db --local --file=schema.sql
+
+# Query local database
+wrangler d1 execute wgze-db --local --command="SELECT * FROM foods"
+```
 
 ## Architecture
 
 ### Tech Stack
-- **Backend**: Go with Gorilla Mux router
-- **Database**: SQLite with modernc.org/sqlite (pure Go implementation)
-- **Frontend**: Server-side rendered HTML templates with HTMX for interactivity
+- **Runtime**: Cloudflare Workers with Hono framework
+- **Language**: TypeScript with JSX for templates  
+- **Database**: Cloudflare D1 (SQLite-compatible)
+- **Frontend**: Server-side rendered JSX with HTMX for interactivity
 - **Styling**: Tailwind CSS via CDN with custom food-themed design
 
+### Project Structure
+```
+wgze-hono/
+├── src/
+│   ├── index.ts              # Main Hono app with routes
+│   ├── types.ts              # TypeScript interfaces
+│   ├── database.ts           # D1 database operations
+│   └── components/           # JSX components
+│       ├── Layout.tsx        # Base layout with nav
+│       ├── Navigation.tsx    # Nav bar component
+│       ├── HomePage.tsx      # Home page form
+│       ├── SpeisenPage.tsx   # Food management page
+│       ├── MahlzeitenPage.tsx # Meal history page
+│       └── FoodList.tsx      # Food list partial
+├── schema.sql               # D1 database schema
+├── wrangler.jsonc          # Cloudflare configuration
+└── package.json            # Dependencies
+```
+
 ### Core Data Model
-```go
-type Food struct {
-    ID    int    // Primary key
-    Name  string // Unique food name
-    Notes string // Recipe/cooking notes
+```typescript
+interface Food {
+  id: number;
+  name: string;
+  notes: string | null;
 }
 
-type Meal struct {
-    ID       int    // Primary key
-    FoodID   int    // Foreign key to foods.id (with CASCADE DELETE)
-    Date     string // Date in YYYY-MM-DD format
-    Notes    string // Meal-specific notes
+interface Meal {
+  id: number;
+  food_id: number;      // Foreign key to foods.id
+  date: string;         // ISO date string YYYY-MM-DD
+  notes: string | null;
 }
 ```
 
 **Critical**: Meals reference foods by ID, not name. This allows food name changes without breaking referential integrity.
 
-### Application Structure
+### Database Layer (D1)
 
-**Three Main Pages**:
-1. **Home** (`/`) - "Was gab's am..." meal entry form with date picker and food autocomplete
-2. **Speisen** (`/speisen`) - Food management with inline editing and CRUD operations
-3. **Mahlzeiten** (`/mahlzeiten`) - Tabular meal history view
+**Connection**: Cloudflare D1 database bound as `DB` in `wrangler.jsonc`
 
-**Template System**:
-- `nav.html` - Shared navigation component
-- `home.html` - Meal entry page with client-side validation
-- `speisen.html` - Food management page
-- `food-list.html` - Partial template for food list with edit/delete functionality
-- `mahlzeiten.html` - Meal history table
+**Schema Features**:
+- Foreign key constraints enabled
+- CASCADE DELETE on food deletion
+- Indexes for performance on common queries
+- SQLite-compatible syntax
 
-### Database Schema & Constraints
+**Database Class** (`src/database.ts`):
+- Encapsulates all D1 operations
+- Handles date calculations for "days ago" logic
+- Provides typed methods for CRUD operations
 
-**Referential Integrity**:
-- Foreign key constraints are strictly enforced
-- Meals can only reference existing foods (validated client-side and server-side)
-- CASCADE DELETE: deleting a food removes all associated meals
-- Food name changes don't affect existing meals (they reference by ID)
+### JSX Components Architecture
 
-**Migrations**:
-- Automatic schema migrations run on startup via `migrateMealsTable()`
-- Handles transition from old schema (food_name FK) to new schema (food_id FK)
+**Layout System**:
+- `Layout.tsx` - Base HTML structure with Tailwind CSS and HTMX
+- `Navigation.tsx` - Shared navigation component
+- Page-specific components render complete pages
 
-### Frontend Architecture
+**Component Props**:
+- All components use TypeScript interfaces for props
+- Database results passed directly to components
+- Server-side rendering with no client-side hydration
 
-**HTMX Integration**:
-- Dynamic form submissions without page reloads
-- Inline editing on speisen page using `toggleEdit()` JavaScript
+**Styling**:
+- Tailwind CSS classes embedded in JSX
+- Custom CSS animations defined in Layout component
+- Food-themed emoji and gradient color scheme
+- Responsive design with mobile-friendly navigation
+
+### HTMX Integration
+
+**Form Handling**:
+- `hx-post` for form submissions
+- `hx-target` and `hx-swap` for partial page updates
+- Error responses return HTML fragments for inline display
+
+**Dynamic Features**:
+- Inline editing on speisen page with JavaScript toggle
 - Real-time validation on home page food input
-- Partial template swapping for smooth UX
+- Partial template updates without page reloads
 
-**Client-side Validation**:
-- Food name validation against existing foods list
-- Visual feedback (border colors, error messages)
-- Form submission prevention for invalid data
+### Route Handlers
 
-**Styling Philosophy**:
-- Food-themed design with warm orange/pink gradient color scheme
-- Extensive use of food emojis for personality
-- Hover animations and visual feedback
-- Mobile-responsive design
+**Page Routes**:
+- `GET /` - Home page with meal entry form
+- `GET /speisen` - Food management page  
+- `GET /mahlzeiten` - Meal history table
 
-### Key Implementation Details
-
-**Database Connection**:
-- Uses pure Go SQLite driver (modernc.org/sqlite) to avoid CGO dependencies
-- Connection string: `"sqlite", "./food_tracker.db"`
-- Foreign keys must be explicitly enabled per connection
-
-**Template Rendering**:
-- Global template variable parsed from `templates/*.html`
-- German language interface throughout
-- Templates receive structured data (foods list, meal history, etc.)
+**API Routes**:
+- `POST /add-meal` - Add new meal entry
+- `POST /add-food` - Add new food to database
+- `POST /edit-food/:id` - Update existing food
+- `DELETE /delete-food/:id` - Remove food (cascade deletes meals)
 
 **Error Handling**:
-- Server errors return HTTP status codes
-- User-friendly error messages for constraint violations
-- Client-side validation prevents most invalid submissions
+- Form validation on server-side
+- HTML error fragments for HTMX responses
+- Proper HTTP status codes for different error types
 
 ## Development Notes
 
 ### Adding New Features
-- Follow the established pattern: handler function → template → HTMX integration
-- Use proper foreign key relationships for data integrity
-- Include appropriate emojis and German text for consistency
-- Test both client-side validation and server-side constraints
+- Create TypeScript interfaces in `types.ts`
+- Add database methods to `Database` class
+- Create JSX components in `components/` directory
+- Add routes to `src/index.ts` with proper error handling
 
 ### Database Changes
-- Add migration logic to `migrateMealsTable()` or create new migration function
-- Always test with existing data
-- Maintain foreign key constraints
+- Update `schema.sql` for new tables/columns
+- Modify TypeScript interfaces accordingly
+- Add database methods to `Database` class
+- Test with local D1 instance first
+
+### Deployment Considerations
+- Database binding configured in `wrangler.jsonc`
+- Environment variables for production vs local
+- D1 database must be created in Cloudflare dashboard for production
+- Foreign key constraints work in D1 (unlike some SQLite implementations)
 
 ### UI/UX Consistency
-- Use Tailwind utility classes with the established color scheme
-- Include relevant food emojis in labels and buttons
-- Maintain German language throughout
-- Follow the inline editing pattern established in speisen page
+- Use TypeScript for type safety
+- Maintain German language throughout interface
+- Include food emojis in JSX components
+- Follow established Tailwind color scheme (orange/pink gradients)
+- Preserve HTMX patterns for form interactions
+
+## Migration Notes
+
+This project was migrated from Go to Hono, preserving:
+- All original functionality and UI design
+- Database schema (adapted for D1)
+- HTMX interactions and validation logic
+- German language interface
+- Food-themed styling and emojis
+
+The migration improves:
+- Type safety with TypeScript
+- Serverless deployment capability
+- Component-based architecture with JSX
+- Better development experience with hot reloading

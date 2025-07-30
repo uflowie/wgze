@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wgze-hono",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-30",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wgze-db",
+      "database_id": "local"
+    }
+  ]
+}
