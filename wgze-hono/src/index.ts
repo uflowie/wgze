@@ -76,11 +76,12 @@ app.post('/auth/login', async (c) => {
   };
   const token = await sign(payload, c.env.JWT_SECRET);
   
-  // Set HTTP-only cookie with signed JWT (no expiration)
+  // Set HTTP-only cookie with signed JWT (maximum expiration)
   setCookie(c, 'auth', token, {
     httpOnly: true,
     secure: true,
-    sameSite: 'Strict'
+    sameSite: 'Strict',
+    maxAge: 34560000 // Maximum possible value (~68 years)
   });
   
   // Redirect to home page
