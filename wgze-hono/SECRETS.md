@@ -8,6 +8,7 @@ Secrets are stored in `.dev.vars` (already created and git-ignored):
 ```
 AUTH_PASSWORD=your-password-here
 JWT_SECRET=your-jwt-secret-here
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
 ## Production Deployment
@@ -20,6 +21,9 @@ npx wrangler secret put AUTH_PASSWORD
 
 # Set the JWT signing secret
 npx wrangler secret put JWT_SECRET
+
+# Set the Gemini API key
+npx wrangler secret put GEMINI_API_KEY
 ```
 
 When prompted, enter the secret values. These will be encrypted and stored securely in Cloudflare.
@@ -28,6 +32,7 @@ When prompted, enter the secret values. These will be encrypted and stored secur
 
 - `AUTH_PASSWORD`: The password users need to enter to log in
 - `JWT_SECRET`: Secret key used to sign JWT authentication tokens (should be a long, random string)
+- `GEMINI_API_KEY`: Google Gemini API key for AI suggestions (get from https://aistudio.google.com/apikey)
 
 ## Security Notes
 

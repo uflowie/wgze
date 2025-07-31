@@ -24,6 +24,7 @@ export interface Bindings {
   DB: D1Database;
   AUTH_PASSWORD: string;
   JWT_SECRET: string;
+  GEMINI_API_KEY: string;
 }
 
 // Form data interfaces

@@ -8,7 +8,9 @@
       "Bash(tasklist:*)",
       "Bash(go run:*)",
       "Bash(powershell:*)",
-      "WebFetch(domain:htmx.org)"
+      "WebFetch(domain:htmx.org)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

@@ -3,6 +3,7 @@ import { html } from 'hono/html';
 import { getCookie, setCookie } from 'hono/cookie';
 import { createMiddleware } from 'hono/factory';
 import { sign, verify } from 'hono/jwt';
+import { GoogleGenAI } from '@google/genai';
 
 import type { Bindings } from './types';
 import { Database } from './database';
@@ -12,6 +13,7 @@ import { MahlzeitenPage } from './components/MahlzeitenPage';
 import { FoodList } from './components/FoodList';
 import { MealList } from './components/MealList';
 import { LoginPage } from './components/LoginPage';
+import { AISuggestionsPage } from './components/AISuggestionsPage';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -117,6 +119,11 @@ app.get('/mahlzeiten', async (c) => {
   const meals = await db.getMeals();
   
   return c.html(MahlzeitenPage({ meals }));
+});
+
+// AI Suggestions page route
+app.get('/ai-suggestions', async (c) => {
+  return c.html(AISuggestionsPage());
 });
 
 // POST /meals - Create a new meal
@@ -229,7 +236,7 @@ app.put('/foods/:id', async (c) => {
     }
     
     // Check if another food with this name already exists (excluding current food)
-    const existingFood = await db.db.prepare(
+    const existingFood = await c.env.DB.prepare(
       'SELECT id FROM foods WHERE name = ? AND id != ?'
     ).bind(name, id).first();
     
@@ -290,6 +297,72 @@ app.delete('/meals/:id', async (c) => {
     return c.html(
       `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
         ❌ Fehler beim Löschen der Mahlzeit
+      </div>`,
+      500
+    );
+  }
+});
+
+// POST /ai-suggestions - Generate AI food suggestions
+app.post('/ai-suggestions', async (c) => {
+  const db = new Database(c.env.DB);
+  
+  try {
+    const body = await c.req.formData();
+    const preferences = body.get('preferences')?.toString() || '';
+    
+    // Get all foods with their last eaten dates
+    const foods = await db.getFoodsWithLastMeal();
+    
+    if (foods.length === 0) {
+      return c.html(
+        `<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+          ⚠️ Sie haben noch keine Speisen hinzugefügt. Gehen Sie zur <a href="/speisen" class="underline hover:text-yellow-800">Speisen-Seite</a>, um Speisen hinzuzufügen.
+        </div>`
+      );
+    }
+    
+    // Initialize Gemini
+
+    const genAI = new GoogleGenAI({ apiKey: c.env.GEMINI_API_KEY });
+    
+    // Prepare the prompt
+    const foodsInfo = foods.map(food => {
+      const lastEaten = food.days_ago === -1 ? 'never eaten' : `${food.days_ago} days ago`;
+      const notes = food.notes ? ` (Notes: ${food.notes})` : '';
+      return `- ${food.name}: last eaten ${lastEaten}${notes}`;
+    }).join('\n');
+    
+    const prompt = `You are a helpful cooking assistant. Based on the following list of foods and when they were last eaten, suggest 2-3 dishes that haven't been eaten in a while. Prioritize foods that haven't been eaten for longer periods.
+
+Foods available:
+${foodsInfo}
+
+User preferences: ${preferences || 'No specific preferences'}
+
+Please respond in German and suggest dishes from the available foods, prioritizing those not eaten recently. Format your response as a simple list with brief explanations.`;
+    
+    // Generate content using Gemini
+    const response = await genAI.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: prompt
+    });
+    
+    const suggestion = response.text || 'Keine Vorschläge verfügbar.';
+    
+    return c.html(
+      `<div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
+          <span>🤖</span> AI Vorschläge:
+        </h3>
+        <div class="text-gray-700 whitespace-pre-wrap">${suggestion}</div>
+      </div>`
+    );
+  } catch (error) {
+    console.error('Error generating AI suggestions:', error);
+    return c.html(
+      `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        ❌ Fehler beim Generieren der Vorschläge. Bitte versuchen Sie es später erneut.
       </div>`,
       500
     );
