@@ -49,11 +49,8 @@ export const SpeisenPage = ({ foods }: SpeisenPageProps) => {
             </form>
           </div>
 
-          <div>
-            <h3 class="text-lg font-semibold mb-4">Alle Speisen (sortiert nach letztem Essen)</h3>
-            <div id="food-list">
-              <FoodList foods={foods} />
-            </div>
+          <div id="food-list">
+            <FoodList foods={foods} />
           </div>
         </div>
       </div>

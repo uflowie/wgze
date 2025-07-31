@@ -5,17 +5,22 @@ interface FoodListProps {
 }
 
 export const FoodList = ({ foods }: FoodListProps) => {
-  if (foods.length === 0) {
-    return (
-      <div class="text-center py-12 text-gray-500">
-        <div class="text-lg mb-2">Noch keine Speisen hinzugefügt</div>
-        <div class="text-sm">Fügen Sie Ihre erste Speise oben hinzu!</div>
-      </div>
-    );
-  }
-
   return (
     <>
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        Alle Speisen 
+        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+          {foods.length}
+        </span>
+      </h3>
+      
+      {foods.length === 0 ? (
+        <div class="text-center py-12 text-gray-500">
+          <div class="text-lg mb-2">Noch keine Speisen hinzugefügt</div>
+          <div class="text-sm">Fügen Sie Ihre erste Speise oben hinzu!</div>
+        </div>
+      ) : (
+        <>
       {foods.map(food => (
         <div 
           key={food.id}
@@ -108,18 +113,20 @@ export const FoodList = ({ foods }: FoodListProps) => {
         </div>
       ))}
 
-      <script dangerouslySetInnerHTML={{
-        __html: `
-        function toggleEdit(id) {
-          const foodItem = document.getElementById('food-' + id);
-          const displayDiv = foodItem.querySelector('.food-display');
-          const editDiv = foodItem.querySelector('.food-edit');
-          
-          displayDiv.classList.toggle('hidden');
-          editDiv.classList.toggle('hidden');
-        }
-        `
-      }} />
+        <script dangerouslySetInnerHTML={{
+          __html: `
+          function toggleEdit(id) {
+            const foodItem = document.getElementById('food-' + id);
+            const displayDiv = foodItem.querySelector('.food-display');
+            const editDiv = foodItem.querySelector('.food-edit');
+            
+            displayDiv.classList.toggle('hidden');
+            editDiv.classList.toggle('hidden');
+          }
+          `
+        }} />
+        </>
+      )}
     </>
   );
 };
