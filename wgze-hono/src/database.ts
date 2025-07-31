@@ -20,7 +20,7 @@ export class Database {
   // Get all foods
   async getFoods(): Promise<Food[]> {
     const result = await this.db.prepare(
-      'SELECT id, name, COALESCE(notes, "") as notes FROM foods ORDER BY name'
+      'SELECT id, name, COALESCE(notes, "") as notes FROM foods ORDER BY name COLLATE NOCASE'
     ).all();
     
     return result.results as Food[];
@@ -34,7 +34,7 @@ export class Database {
       FROM foods f
       LEFT JOIN meals m ON f.id = m.food_id
       GROUP BY f.id, f.name, f.notes
-      ORDER BY last_had ASC, f.name
+      ORDER BY f.name COLLATE NOCASE
     `).all();
 
     return (result.results as any[]).map(row => ({
@@ -46,7 +46,7 @@ export class Database {
   // Get food names for autocomplete
   async getFoodNames(): Promise<string[]> {
     const result = await this.db.prepare(
-      'SELECT name FROM foods ORDER BY name'
+      'SELECT name FROM foods ORDER BY name COLLATE NOCASE'
     ).all();
     
     return result.results.map((row: any) => row.name);
