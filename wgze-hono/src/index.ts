@@ -138,22 +138,20 @@ app.post('/meals', async (c) => {
       );
     }
     
-    // Check if food exists
+    // Check if food exists, if not create it automatically
     const exists = await db.foodExists(foodName);
+    let message = '✅ Mahlzeit erfolgreich hinzugefügt!';
+    
     if (!exists) {
-      return c.html(
-        `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          ❌ Diese Speise existiert nicht! Bitte fügen Sie sie zuerst auf der <a href="/speisen" class="underline hover:text-red-800">Speisen-Seite</a> hinzu.
-        </div>`,
-        400
-      );
+      await db.addFood(foodName); // Add food with no description
+      message = `✅ Mahlzeit hinzugefügt! Die neue Speise "${foodName}" wurde automatisch erstellt.`;
     }
     
     await db.addMeal(foodName, date, notes);
     
     return c.html(
       `<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        ✅ Mahlzeit erfolgreich hinzugefügt!
+        ${message}
       </div>`
     );
   } catch (error) {

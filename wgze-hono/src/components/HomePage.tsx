@@ -53,7 +53,6 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
                         <option value={name} key={name} />
                       ))}
                     </datalist>
-                    <div id="food-validation-message" class="mt-1 text-sm hidden"></div>
                   </div>
                 ) : (
                   <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
