@@ -101,6 +101,13 @@ export class Database {
     ).bind(id).run();
   }
 
+  // Delete a meal
+  async deleteMeal(id: number): Promise<void> {
+    await this.db.prepare(
+      'DELETE FROM meals WHERE id = ?'
+    ).bind(id).run();
+  }
+
   // Check if food exists by name
   async foodExists(name: string): Promise<boolean> {
     const result = await this.db.prepare(

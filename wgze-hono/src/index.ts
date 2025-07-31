@@ -10,6 +10,7 @@ import { HomePage } from './components/HomePage';
 import { SpeisenPage } from './components/SpeisenPage';
 import { MahlzeitenPage } from './components/MahlzeitenPage';
 import { FoodList } from './components/FoodList';
+import { MealList } from './components/MealList';
 import { LoginPage } from './components/LoginPage';
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -271,6 +272,28 @@ app.delete('/foods/:id', async (c) => {
   } catch (error) {
     console.error('Error deleting food:', error);
     return c.text('Failed to delete food', 500);
+  }
+});
+
+// DELETE /meals/:id - Delete a meal
+app.delete('/meals/:id', async (c) => {
+  const db = new Database(c.env.DB);
+  
+  try {
+    const id = parseInt(c.req.param('id'));
+    
+    await db.deleteMeal(id);
+    const meals = await db.getMeals();
+    
+    return c.html(MealList({ meals }));
+  } catch (error) {
+    console.error('Error deleting meal:', error);
+    return c.html(
+      `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        ❌ Fehler beim Löschen der Mahlzeit
+      </div>`,
+      500
+    );
   }
 });
 
