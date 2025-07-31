@@ -175,7 +175,23 @@ app.post('/foods', async (c) => {
     const notes = body.get('notes')?.toString();
     
     if (!name) {
-      return c.text('Food name is required', 400);
+      return c.html(
+        `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          ❌ Food name is required
+        </div>`,
+        400
+      );
+    }
+    
+    // Check if food already exists
+    const exists = await db.foodExists(name);
+    if (exists) {
+      return c.html(
+        `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          ❌ Eine Speise mit diesem Namen existiert bereits!
+        </div>`,
+        400
+      );
     }
     
     await db.addFood(name, notes);
@@ -184,7 +200,12 @@ app.post('/foods', async (c) => {
     return c.html(FoodList({ foods }));
   } catch (error) {
     console.error('Error adding food:', error);
-    return c.text('Failed to add food', 500);
+    return c.html(
+      `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        ❌ Fehler beim Hinzufügen der Speise
+      </div>`,
+      500
+    );
   }
 });
 
@@ -199,7 +220,26 @@ app.put('/foods/:id', async (c) => {
     const notes = body.get('notes')?.toString();
     
     if (!name) {
-      return c.text('Food name is required', 400);
+      return c.html(
+        `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          ❌ Food name is required
+        </div>`,
+        400
+      );
+    }
+    
+    // Check if another food with this name already exists (excluding current food)
+    const existingFood = await db.db.prepare(
+      'SELECT id FROM foods WHERE name = ? AND id != ?'
+    ).bind(name, id).first();
+    
+    if (existingFood) {
+      return c.html(
+        `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          ❌ Eine andere Speise mit diesem Namen existiert bereits!
+        </div>`,
+        400
+      );
     }
     
     await db.editFood(id, name, notes);
@@ -208,7 +248,12 @@ app.put('/foods/:id', async (c) => {
     return c.html(FoodList({ foods }));
   } catch (error) {
     console.error('Error editing food:', error);
-    return c.text('Failed to edit food', 500);
+    return c.html(
+      `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        ❌ Fehler beim Bearbeiten der Speise
+      </div>`,
+      500
+    );
   }
 });
 
