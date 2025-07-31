@@ -336,14 +336,42 @@ app.post('/ai-suggestions', async (c) => {
       return `- ${food.name}: last eaten ${lastEaten}${notes}`;
     }).join('\n');
     
-    const prompt = `You are a helpful cooking assistant. Based on the following list of foods and when they were last eaten, suggest 2-3 dishes that haven't been eaten in a while. Prioritize foods that haven't been eaten for longer periods.
+    const todayDate = new Date().toISOString().split('T')[0];
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+    const currentSeason = currentMonth >= 3 && currentMonth <= 5 ? 'Frühling' : 
+                         currentMonth >= 6 && currentMonth <= 8 ? 'Sommer' : 
+                         currentMonth >= 9 && currentMonth <= 11 ? 'Herbst' : 'Winter';
 
-Foods available:
-${foodsInfo}
+    const prompt = `
+<role>
+You are a helpful cooking assistant. Based on the following list of foods and when they were last eaten, suggest 3 dishes that haven't been eaten in a while. Prioritize foods that haven't been eaten for longer periods.
+</role>
 
+<seasonal-exclusions>
+Some meals are only eaten during certain seasons (date-based, season-based, festivities-based etc). Do NOT consider these foods if they do not fit the current season/date.
+Today's date: ${todayDate}
+Current season: ${currentSeason}
+
+</seasonal-exclusions>
+
+<user-preferences>
+If the user has any preferences for foods, make sure that ALL suggested foods conform to these preferences.
 User preferences: ${preferences || 'No specific preferences'}
+</user-preferences>
 
-Please respond in German and suggest dishes from the available foods, prioritizing those not eaten recently. Format your response as a simple list with brief explanations.`;
+<foods>
+${foodsInfo}
+</foods>
+
+<strictness>
+If foods are tied in terms of how long ago they have been eaten, take the one that appears earlier in the list.
+You do not always have to output the "oldest" 3 foods, in fact it will feel more natural to sometimes have food in there that has been eaten more recently.
+</strictness>
+
+<output>
+Please respond in German and format your response as a simple list with brief explanations.
+</output>
+`;
     
     // Generate content using Gemini
     const response = await genAI.models.generateContent({
