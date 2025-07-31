@@ -46,7 +46,6 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
                       required
                       list="food-suggestions"
                       autocomplete="off"
-                      oninput="validateFoodName()"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
                     <datalist id="food-suggestions">
@@ -97,55 +96,6 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
           </div>
         </div>
       </div>
-
-      <script>{`
-        const validFoods = ${JSON.stringify(foodNames)};
-        
-        function validateFoodName() {
-          const input = document.getElementById('food_name');
-          const message = document.getElementById('food-validation-message');
-          const submitBtn = document.getElementById('submit-btn');
-          const value = input.value.trim();
-          
-          if (value === '') {
-            // Empty input - reset state
-            input.classList.remove('border-red-500', 'border-green-500');
-            input.classList.add('border-gray-300');
-            message.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-            return;
-          }
-          
-          const isValid = validFoods.includes(value);
-          
-          if (isValid) {
-            // Valid food name
-            input.classList.remove('border-red-500', 'border-gray-300');
-            input.classList.add('border-green-500');
-            message.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-          } else {
-            // Invalid food name
-            input.classList.remove('border-green-500', 'border-gray-300');
-            input.classList.add('border-red-500');
-            message.textContent = 'Diese Speise existiert nicht. Wählen Sie aus der Liste oder fügen Sie sie auf der Speisen-Seite hinzu.';
-            message.classList.remove('hidden');
-            message.classList.add('text-red-600');
-            if (submitBtn) submitBtn.disabled = true;
-          }
-        }
-        
-        document.querySelector('form').addEventListener('submit', function(e) {
-          const input = document.getElementById('food_name');
-          const value = input.value.trim();
-          
-          if (value !== '' && !validFoods.includes(value)) {
-            e.preventDefault();
-            validateFoodName();
-            return false;
-          }
-        });
-      `}</script>
     </Layout>
   );
 };
