@@ -19,7 +19,7 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
               hx-target-400="#message"
               hx-target-500="#message"
               hx-swap="innerHTML" 
-              hx-on="htmx:afterRequest: if(event.detail.successful) this.reset()" 
+              hx-on--after-request="if(event.detail.successful) this.reset()" 
               class="space-y-4"
             >
               <div>

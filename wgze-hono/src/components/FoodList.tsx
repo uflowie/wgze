@@ -67,7 +67,7 @@ export const FoodList = ({ foods }: FoodListProps) => {
           </div>
           
           <div class="food-edit hidden">
-            <form hx-put={`/foods/${food.id}`} hx-target="#food-list" hx-target-400="#food-list" hx-target-500="#food-list" hx-swap="innerHTML" class="space-y-4">
+            <form hx-put={`/foods/${food.id}`} hx-target="#food-list" hx-target-400="#food-list" hx-target-500="#food-list" hx-swap="innerHTML" hx-on--after-request="if(event.detail.successful) this.reset()" class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Name der Speise:</label>
                 <input 
