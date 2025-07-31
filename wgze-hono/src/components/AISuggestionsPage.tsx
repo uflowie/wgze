@@ -17,13 +17,13 @@ export const AISuggestionsPage = () => {
                 <label for="preferences" class="block text-sm font-medium text-gray-700 mb-2">
                   Ihre Wünsche (optional):
                 </label>
-                <textarea 
+                <input 
+                  type="text"
                   id="preferences"
                   name="preferences" 
                   placeholder="z.B. etwas Vegetarisches, etwas Schnelles, etwas mit Pasta..."
-                  rows="3"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
-                ></textarea>
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
               </div>
               
               <button 
