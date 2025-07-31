@@ -16,6 +16,10 @@ export const Layout = ({ title, children }: LayoutProps) => {
         <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/htmx-ext-response-targets@2.0.2"></script>
         <script src="https://cdn.tailwindcss.com"></script>
+        <style>{`
+          .htmx-indicator { display: none; }
+          .htmx-request.htmx-indicator { display: block; }
+        `}</style>
       </head>
       <body class="bg-gray-100 min-h-screen" hx-ext="response-targets">
         <Navigation />
