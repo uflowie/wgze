@@ -343,21 +343,22 @@ app.post('/ai-suggestions', async (c) => {
                          currentMonth >= 9 && currentMonth <= 11 ? 'Herbst' : 'Winter';
 
     const prompt = `
-<role>
-You are a helpful cooking assistant. Based on the following list of foods and when they were last eaten, suggest 3 dishes that haven't been eaten in a while. Prioritize foods that haven't been eaten for longer periods.
-</role>
+<task>
+Your goal is to suggest 3 foods to the user. In order to arrive at these 3 foods you will execute the following 4 steps in order:
+1. FILTER: NEVER suggest foods that have been eaten within the last 14 days.
+2. FILTER: Consider the user's preferences, if any. All foods that do NOT fit those preferences can NOT be picked for the suggestions.
+3. FILTER: Consider the current season and date. All foods that EXPLICITLY mention being seasonal can NOT be picked for the suggestions if their seasonality is not currently given.
+4. SELECT: Among the remaining foods, pick 3. The longer a food has not been eaten, the more likely it is to be picked but do NOT just pick the oldest three every time.
+</task>
 
-<seasonal-exclusions>
-Some meals are only eaten during certain seasons (date-based, season-based, festivities-based etc). Do NOT consider these foods if they do not fit the current season/date.
+<seasonal-filter>
 Today's date: ${todayDate}
 Current season: ${currentSeason}
+</seasonal-filter>
 
-</seasonal-exclusions>
-
-<user-preferences>
-If the user has any preferences for foods, make sure that ALL suggested foods conform to these preferences.
-User preferences: ${preferences || 'No specific preferences'}
-</user-preferences>
+<user-preferences-filter>
+${preferences || 'No specific preferences'}
+</user-preferences-filter>
 
 <foods>
 ${foodsInfo}
@@ -365,11 +366,10 @@ ${foodsInfo}
 
 <strictness>
 If foods are tied in terms of how long ago they have been eaten, take the one that appears earlier in the list.
-You do not always have to output the "oldest" 3 foods, in fact it will feel more natural to sometimes have food in there that has been eaten more recently.
 </strictness>
 
 <output>
-Please respond in German and format your response as a simple list with brief explanations.
+Please respond in German and format your response as a simple list with brief explanations. End the suggestions with a poem about the foods that you picked.
 </output>
 `;
     
