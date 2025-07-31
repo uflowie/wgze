@@ -344,7 +344,7 @@ Please respond in German and suggest dishes from the available foods, prioritizi
     
     // Generate content using Gemini
     const response = await genAI.models.generateContent({
-      model: 'gemini-2.0-flash-001',
+      model: 'gemini-2.5-flash',
       contents: prompt
     });
     
