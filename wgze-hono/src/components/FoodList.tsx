@@ -23,7 +23,7 @@ export const FoodList = ({ foods }: FoodListProps) => {
           id={`food-${food.id}`}
         >
           <div class="food-display">
-            <div class="flex items-start justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between">
               <div class="flex-1">
                 <div class="text-lg font-semibold text-gray-800 mb-1">{food.name}</div>
                 {food.notes && (
@@ -45,7 +45,7 @@ export const FoodList = ({ foods }: FoodListProps) => {
                   )}
                 </div>
               </div>
-              <div class="flex gap-2 ml-4">
+              <div class="flex gap-2 mt-3 sm:mt-0 sm:ml-4">
                 <button 
                   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium" 
                   onclick={`toggleEdit(${food.id})`}
@@ -88,17 +88,17 @@ export const FoodList = ({ foods }: FoodListProps) => {
                 >{food.notes || ''}</textarea>
               </div>
               
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-wrap">
                 <button 
                   type="submit" 
-                  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                  class="px-2 sm:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium whitespace-nowrap"
                 >
                   Speichern
                 </button>
                 <button 
                   type="button" 
                   onclick={`toggleEdit(${food.id})`}
-                  class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                  class="px-2 sm:px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium whitespace-nowrap"
                 >
                   Abbrechen
                 </button>
