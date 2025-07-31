@@ -108,7 +108,8 @@ export const FoodList = ({ foods }: FoodListProps) => {
         </div>
       ))}
 
-      <script>{`
+      <script dangerouslySetInnerHTML={{
+        __html: `
         function toggleEdit(id) {
           const foodItem = document.getElementById('food-' + id);
           const displayDiv = foodItem.querySelector('.food-display');
@@ -117,7 +118,8 @@ export const FoodList = ({ foods }: FoodListProps) => {
           displayDiv.classList.toggle('hidden');
           editDiv.classList.toggle('hidden');
         }
-      `}</script>
+        `
+      }} />
     </>
   );
 };
