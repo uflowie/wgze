@@ -314,6 +314,9 @@ app.post('/ai-suggestions', async (c) => {
     // Get all foods with their last eaten dates
     const foods = await db.getFoodsWithLastMeal();
     
+    // Shuffle the foods array to prevent AI bias toward first items
+    const shuffledFoods = [...foods].sort(() => Math.random() - 0.5);
+    
     if (foods.length === 0) {
       return c.html(
         `<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
@@ -327,7 +330,7 @@ app.post('/ai-suggestions', async (c) => {
     const genAI = new GoogleGenAI({ apiKey: c.env.GEMINI_API_KEY });
     
     // Prepare the prompt
-    const foodsInfo = foods.map(food => {
+    const foodsInfo = shuffledFoods.map(food => {
       const lastEaten = food.days_ago === -1 ? 'never eaten' : `${food.days_ago} days ago`;
       const notes = food.notes ? ` (Notes: ${food.notes})` : '';
       return `- ${food.name}: last eaten ${lastEaten}${notes}`;
