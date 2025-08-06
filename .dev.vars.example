@@ -1,0 +1,6 @@
+# Authentication
+JWT_SECRET=your-jwt-secret-here
+AUTH_PASSWORD=your-admin-password-here
+
+# AI Integration
+GEMINI_API_KEY=your-gemini-api-key-here
