@@ -1,6 +1,6 @@
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/uflowie/wgze)
 
-WGZE (Was gibt's zum Essen) is a German food tracking web application that helps users manage their cooking repertoire and track meal consumption. Built with Hono (TypeScript), JSX templates, and Cloudflare D1 database.
+WGZE (Was gibt's zum Essen) is a German food tracking web application that helps users manage their cooking repertoire and track meal consumption. Built with Hono, JSX templates, HTMX, Cloudflare Workers and Cloudflare D1.
 
 ## Features
 
