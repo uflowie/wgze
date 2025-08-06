@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Bindings, Meal } from '../types';
 import { HomePage } from '../components/HomePage';
-import { MahlzeitenPage } from '../components/MahlzeitenPage';
+import { MahlzeitenPage } from '../components/MealsPage';
 import { MealList } from '../components/MealList';
 import getTodayString from '../util';
 

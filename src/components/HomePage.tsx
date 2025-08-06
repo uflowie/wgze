@@ -13,21 +13,21 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
           <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Was gab's am...</h2>
 
           <div class="max-w-md mx-auto">
-            <form 
-              hx-post="/meals" 
-              hx-target="#message" 
+            <form
+              hx-post="/meals"
+              hx-target="#message"
               hx-target-400="#message"
               hx-target-500="#message"
-              hx-swap="innerHTML" 
-              hx-on--after-request="if(event.detail.successful) this.reset()" 
+              hx-swap="innerHTML"
+              hx-on--after-request="if(event.detail.successful) this.reset()"
               class="space-y-4"
             >
               <div>
                 <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Datum:</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   id="date"
-                  name="date" 
+                  name="date"
                   value={today}
                   required
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -38,10 +38,10 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
                 <label for="food_name" class="block text-sm font-medium text-gray-700 mb-2">Speise:</label>
                 {foodNames.length > 0 ? (
                   <div class="relative">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       id="food_name"
-                      name="food_name" 
+                      name="food_name"
                       placeholder="Name der Speise eingeben..."
                       required
                       list="food-suggestions"
@@ -63,26 +63,26 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
 
               <div>
                 <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Anmerkungen (optional):</label>
-                <textarea 
+                <textarea
                   id="notes"
-                  name="notes" 
+                  name="notes"
                   placeholder="Zusätzliche Notizen..."
-                  rows="3"
+                  rows={6}
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
                 ></textarea>
               </div>
 
               {foodNames.length > 0 ? (
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   id="submit-btn"
                   class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg"
                 >
                   Mahlzeit hinzufügen
                 </button>
               ) : (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   disabled
                   class="w-full px-6 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed font-medium text-lg"
                 >

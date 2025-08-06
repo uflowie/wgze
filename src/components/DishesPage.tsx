@@ -1,5 +1,5 @@
 import { Layout } from './Layout';
-import { FoodList } from './FoodList';
+import { FoodList } from './DishList';
 import type { FoodWithLastMeal } from '../types';
 
 interface SpeisenPageProps {

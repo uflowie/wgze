@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Bindings, FoodWithLastMeal } from '../types';
-import { SpeisenPage } from '../components/SpeisenPage';
-import { FoodList } from '../components/FoodList';
+import { SpeisenPage } from '../components/DishesPage';
+import { FoodList } from '../components/DishList';
 
 const app = new Hono<{ Bindings: Bindings }>()
 
