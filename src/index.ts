@@ -5,8 +5,7 @@ import { createMiddleware } from 'hono/factory';
 import { sign, verify } from 'hono/jwt';
 import { GoogleGenAI } from '@google/genai';
 
-import type { Bindings } from './types';
-import { Database } from './database';
+import type { Bindings, Food, Meal, FoodWithLastMeal } from './types';
 import { HomePage } from './components/HomePage';
 import { SpeisenPage } from './components/SpeisenPage';
 import { MahlzeitenPage } from './components/MahlzeitenPage';
@@ -21,6 +20,18 @@ const app = new Hono<{ Bindings: Bindings }>();
 // Helper function to get today's date in YYYY-MM-DD format
 function getTodayString(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+// Calculate days ago from date string
+function calculateDaysAgo(dateString: string | null): number {
+  if (!dateString) return -1;
+  
+  const date = new Date(dateString);
+  const today = new Date();
+  const diffTime = today.getTime() - date.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
 }
 
 // Authentication middleware
@@ -98,8 +109,12 @@ app.post('/auth/login', async (c) => {
 
 // Home page route
 app.get('/', async (c) => {
-  const db = new Database(c.env.DB);
-  const foodNames = await db.getFoodNames();
+  // Get food names for autocomplete
+  const result = await c.env.DB.prepare(
+    'SELECT name FROM foods ORDER BY name COLLATE NOCASE'
+  ).all();
+  
+  const foodNames = result.results.map((row: any) => row.name);
   const today = getTodayString();
   
   return c.html(HomePage({ foodNames, today }));
@@ -107,16 +122,35 @@ app.get('/', async (c) => {
 
 // Speisen page route
 app.get('/speisen', async (c) => {
-  const db = new Database(c.env.DB);
-  const foods = await db.getFoodsWithLastMeal();
+  // Get foods with last meal information
+  const result = await c.env.DB.prepare(`
+    SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
+           COALESCE(MAX(m.date), '') as last_had
+    FROM foods f
+    LEFT JOIN meals m ON f.id = m.food_id
+    GROUP BY f.id, f.name, f.notes
+    ORDER BY f.name COLLATE NOCASE
+  `).all();
+
+  const foods = (result.results as any[]).map(row => ({
+    ...row,
+    days_ago: calculateDaysAgo(row.last_had || null)
+  })) as FoodWithLastMeal[];
   
   return c.html(SpeisenPage({ foods }));
 });
 
 // Mahlzeiten page route
 app.get('/mahlzeiten', async (c) => {
-  const db = new Database(c.env.DB);
-  const meals = await db.getMeals();
+  // Get meals with food names
+  const result = await c.env.DB.prepare(`
+    SELECT m.id, m.food_id, f.name as food_name, m.date, COALESCE(m.notes, '') as notes
+    FROM meals m
+    JOIN foods f ON m.food_id = f.id
+    ORDER BY m.date DESC
+  `).all();
+  
+  const meals = result.results as Meal[];
   
   return c.html(MahlzeitenPage({ meals }));
 });
@@ -128,8 +162,6 @@ app.get('/ai-suggestions', async (c) => {
 
 // POST /meals - Create a new meal
 app.post('/meals', async (c) => {
-  const db = new Database(c.env.DB);
-  
   try {
     const body = await c.req.formData();
     const foodName = body.get('food_name')?.toString();
@@ -145,16 +177,35 @@ app.post('/meals', async (c) => {
       );
     }
     
-    // Check if food exists, if not create it automatically
-    const exists = await db.foodExists(foodName);
+    // Check if food exists
+    const existingFood = await c.env.DB.prepare(
+      'SELECT 1 FROM foods WHERE name = ? LIMIT 1'
+    ).bind(foodName).first();
+    
+    const exists = existingFood !== null;
     let message = '✅ Mahlzeit erfolgreich hinzugefügt!';
     
     if (!exists) {
-      await db.addFood(foodName); // Add food with no description
+      // Add food with no description
+      await c.env.DB.prepare(
+        'INSERT INTO foods (name, notes) VALUES (?, ?)'
+      ).bind(foodName, null).run();
       message = `✅ Mahlzeit hinzugefügt! Die neue Speise "${foodName}" wurde automatisch erstellt.`;
     }
     
-    await db.addMeal(foodName, date, notes);
+    // Get the food ID
+    const foodResult = await c.env.DB.prepare(
+      'SELECT id FROM foods WHERE name = ?'
+    ).bind(foodName).first();
+    
+    if (!foodResult) {
+      throw new Error('Food not found');
+    }
+    
+    // Add the meal
+    await c.env.DB.prepare(
+      'INSERT INTO meals (food_id, date, notes) VALUES (?, ?, ?)'
+    ).bind(foodResult.id, date, notes || null).run();
     
     return c.html(
       `<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
@@ -174,8 +225,6 @@ app.post('/meals', async (c) => {
 
 // POST /foods - Create a new food
 app.post('/foods', async (c) => {
-  const db = new Database(c.env.DB);
-  
   try {
     const body = await c.req.formData();
     const name = body.get('name')?.toString();
@@ -191,8 +240,11 @@ app.post('/foods', async (c) => {
     }
     
     // Check if food already exists
-    const exists = await db.foodExists(name);
-    if (exists) {
+    const existingFood = await c.env.DB.prepare(
+      'SELECT 1 FROM foods WHERE name = ? LIMIT 1'
+    ).bind(name).first();
+    
+    if (existingFood !== null) {
       return c.html(
         `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           ❌ Eine Speise mit diesem Namen existiert bereits!
@@ -201,8 +253,25 @@ app.post('/foods', async (c) => {
       );
     }
     
-    await db.addFood(name, notes);
-    const foods = await db.getFoodsWithLastMeal();
+    // Add the food
+    await c.env.DB.prepare(
+      'INSERT INTO foods (name, notes) VALUES (?, ?)'
+    ).bind(name, notes || null).run();
+    
+    // Get updated foods list
+    const result = await c.env.DB.prepare(`
+      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
+             COALESCE(MAX(m.date), '') as last_had
+      FROM foods f
+      LEFT JOIN meals m ON f.id = m.food_id
+      GROUP BY f.id, f.name, f.notes
+      ORDER BY f.name COLLATE NOCASE
+    `).all();
+
+    const foods = (result.results as any[]).map(row => ({
+      ...row,
+      days_ago: calculateDaysAgo(row.last_had || null)
+    })) as FoodWithLastMeal[];
     
     return c.html(FoodList({ foods }));
   } catch (error) {
@@ -218,8 +287,6 @@ app.post('/foods', async (c) => {
 
 // PUT /foods/:id - Update an existing food
 app.put('/foods/:id', async (c) => {
-  const db = new Database(c.env.DB);
-  
   try {
     const id = parseInt(c.req.param('id'));
     const body = await c.req.formData();
@@ -249,8 +316,25 @@ app.put('/foods/:id', async (c) => {
       );
     }
     
-    await db.editFood(id, name, notes);
-    const foods = await db.getFoodsWithLastMeal();
+    // Update the food
+    await c.env.DB.prepare(
+      'UPDATE foods SET name = ?, notes = ? WHERE id = ?'
+    ).bind(name, notes || null, id).run();
+    
+    // Get updated foods list
+    const result = await c.env.DB.prepare(`
+      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
+             COALESCE(MAX(m.date), '') as last_had
+      FROM foods f
+      LEFT JOIN meals m ON f.id = m.food_id
+      GROUP BY f.id, f.name, f.notes
+      ORDER BY f.name COLLATE NOCASE
+    `).all();
+
+    const foods = (result.results as any[]).map(row => ({
+      ...row,
+      days_ago: calculateDaysAgo(row.last_had || null)
+    })) as FoodWithLastMeal[];
     
     return c.html(FoodList({ foods }));
   } catch (error) {
@@ -266,13 +350,28 @@ app.put('/foods/:id', async (c) => {
 
 // DELETE /foods/:id - Delete a food
 app.delete('/foods/:id', async (c) => {
-  const db = new Database(c.env.DB);
-  
   try {
     const id = parseInt(c.req.param('id'));
     
-    await db.deleteFood(id);
-    const foods = await db.getFoodsWithLastMeal();
+    // Delete the food (cascade deletes meals automatically via foreign key)
+    await c.env.DB.prepare(
+      'DELETE FROM foods WHERE id = ?'
+    ).bind(id).run();
+    
+    // Get updated foods list
+    const result = await c.env.DB.prepare(`
+      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
+             COALESCE(MAX(m.date), '') as last_had
+      FROM foods f
+      LEFT JOIN meals m ON f.id = m.food_id
+      GROUP BY f.id, f.name, f.notes
+      ORDER BY f.name COLLATE NOCASE
+    `).all();
+
+    const foods = (result.results as any[]).map(row => ({
+      ...row,
+      days_ago: calculateDaysAgo(row.last_had || null)
+    })) as FoodWithLastMeal[];
     
     return c.html(FoodList({ foods }));
   } catch (error) {
@@ -283,13 +382,23 @@ app.delete('/foods/:id', async (c) => {
 
 // DELETE /meals/:id - Delete a meal
 app.delete('/meals/:id', async (c) => {
-  const db = new Database(c.env.DB);
-  
   try {
     const id = parseInt(c.req.param('id'));
     
-    await db.deleteMeal(id);
-    const meals = await db.getMeals();
+    // Delete the meal
+    await c.env.DB.prepare(
+      'DELETE FROM meals WHERE id = ?'
+    ).bind(id).run();
+    
+    // Get updated meals list
+    const result = await c.env.DB.prepare(`
+      SELECT m.id, m.food_id, f.name as food_name, m.date, COALESCE(m.notes, '') as notes
+      FROM meals m
+      JOIN foods f ON m.food_id = f.id
+      ORDER BY m.date DESC
+    `).all();
+    
+    const meals = result.results as Meal[];
     
     return c.html(MealList({ meals }));
   } catch (error) {
@@ -305,14 +414,24 @@ app.delete('/meals/:id', async (c) => {
 
 // POST /ai-suggestions - Generate AI food suggestions
 app.post('/ai-suggestions', async (c) => {
-  const db = new Database(c.env.DB);
-  
   try {
     const body = await c.req.formData();
     const preferences = body.get('preferences')?.toString() || '';
     
     // Get all foods with their last eaten dates
-    const foods = await db.getFoodsWithLastMeal();
+    const result = await c.env.DB.prepare(`
+      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
+             COALESCE(MAX(m.date), '') as last_had
+      FROM foods f
+      LEFT JOIN meals m ON f.id = m.food_id
+      GROUP BY f.id, f.name, f.notes
+      ORDER BY f.name COLLATE NOCASE
+    `).all();
+
+    const foods = (result.results as any[]).map(row => ({
+      ...row,
+      days_ago: calculateDaysAgo(row.last_had || null)
+    })) as FoodWithLastMeal[];
     
     // Shuffle the foods array to prevent AI bias toward first items
     const shuffledFoods = [...foods].sort(() => Math.random() - 0.5);
