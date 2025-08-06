@@ -1,9 +1,7 @@
 import { Hono } from 'hono';
 import type { Bindings, Meal } from '../types';
-import { HomePage } from '../components/HomePage';
 import { MahlzeitenPage } from '../components/MealsPage';
 import { MealList } from '../components/MealList';
-import getTodayString from '../util';
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -15,11 +13,9 @@ const app = new Hono<{ Bindings: Bindings }>()
     FROM meals m
     JOIN foods f ON m.food_id = f.id
     ORDER BY m.date DESC
-  `).all();
+  `).all<Meal>();
 
-    const meals = result.results as Meal[];
-
-    return c.html(MahlzeitenPage({ meals }));
+    return c.html(MahlzeitenPage({ meals: result.results }));
   })
   // POST /meals - Create a new meal
   .post('/', async (c) => {
@@ -100,11 +96,9 @@ const app = new Hono<{ Bindings: Bindings }>()
       FROM meals m
       JOIN foods f ON m.food_id = f.id
       ORDER BY m.date DESC
-    `).all();
+    `).all<Meal>();
 
-      const meals = result.results as Meal[];
-
-      return c.html(MealList({ meals }));
+      return c.html(MealList({ meals: result.results }));
     } catch (error) {
       console.error('Error deleting meal:', error);
       return c.html(

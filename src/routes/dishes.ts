@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { Bindings, FoodWithLastMeal } from '../types';
+import type { Bindings, Food, FoodWithLastMeal } from '../types';
 import { SpeisenPage } from '../components/DishesPage';
 import { FoodList } from '../components/DishList';
 
@@ -17,23 +17,26 @@ function calculateDaysAgo(dateString: string | null): number {
   return diffDays;
 }
 
-// GET /dishes - Foods management page
-app.get('/', async (c) => {
-  // Get foods with last meal information
-  const result = await c.env.DB.prepare(`
+// Helper function to get all foods with last meal information
+async function getFoodsWithLastMeal(db: D1Database): Promise<FoodWithLastMeal[]> {
+  const result = await db.prepare(`
     SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
            COALESCE(MAX(m.date), '') as last_had
     FROM foods f
     LEFT JOIN meals m ON f.id = m.food_id
     GROUP BY f.id, f.name, f.notes
     ORDER BY f.name COLLATE NOCASE
-  `).all();
+  `).all<Food & { last_had: string }>();
 
-  const foods = (result.results as any[]).map(row => ({
+  return result.results.map(row => ({
     ...row,
     days_ago: calculateDaysAgo(row.last_had || null)
   })) as FoodWithLastMeal[];
+}
 
+// GET /dishes - Foods management page
+app.get('/', async (c) => {
+  const foods = await getFoodsWithLastMeal(c.env.DB);
   return c.html(SpeisenPage({ foods }));
 })
 
@@ -73,20 +76,7 @@ app.get('/', async (c) => {
       ).bind(name, notes || null).run();
 
       // Get updated foods list
-      const result = await c.env.DB.prepare(`
-      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
-             COALESCE(MAX(m.date), '') as last_had
-      FROM foods f
-      LEFT JOIN meals m ON f.id = m.food_id
-      GROUP BY f.id, f.name, f.notes
-      ORDER BY f.name COLLATE NOCASE
-    `).all();
-
-      const foods = (result.results as any[]).map(row => ({
-        ...row,
-        days_ago: calculateDaysAgo(row.last_had || null)
-      })) as FoodWithLastMeal[];
-
+      const foods = await getFoodsWithLastMeal(c.env.DB);
       return c.html(FoodList({ foods }));
     } catch (error) {
       console.error('Error adding food:', error);
@@ -136,20 +126,7 @@ app.get('/', async (c) => {
       ).bind(name, notes || null, id).run();
 
       // Get updated foods list
-      const result = await c.env.DB.prepare(`
-      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
-             COALESCE(MAX(m.date), '') as last_had
-      FROM foods f
-      LEFT JOIN meals m ON f.id = m.food_id
-      GROUP BY f.id, f.name, f.notes
-      ORDER BY f.name COLLATE NOCASE
-    `).all();
-
-      const foods = (result.results as any[]).map(row => ({
-        ...row,
-        days_ago: calculateDaysAgo(row.last_had || null)
-      })) as FoodWithLastMeal[];
-
+      const foods = await getFoodsWithLastMeal(c.env.DB);
       return c.html(FoodList({ foods }));
     } catch (error) {
       console.error('Error editing food:', error);
@@ -173,20 +150,7 @@ app.get('/', async (c) => {
       ).bind(id).run();
 
       // Get updated foods list
-      const result = await c.env.DB.prepare(`
-      SELECT f.id, f.name, COALESCE(f.notes, '') as notes,
-             COALESCE(MAX(m.date), '') as last_had
-      FROM foods f
-      LEFT JOIN meals m ON f.id = m.food_id
-      GROUP BY f.id, f.name, f.notes
-      ORDER BY f.name COLLATE NOCASE
-    `).all();
-
-      const foods = (result.results as any[]).map(row => ({
-        ...row,
-        days_ago: calculateDaysAgo(row.last_had || null)
-      })) as FoodWithLastMeal[];
-
+      const foods = await getFoodsWithLastMeal(c.env.DB);
       return c.html(FoodList({ foods }));
     } catch (error) {
       console.error('Error deleting food:', error);

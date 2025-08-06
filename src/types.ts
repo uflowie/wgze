@@ -1,5 +1,3 @@
-// WGZE Types for Hono/D1 migration
-
 export interface Food {
   id: number;
   name: string;
@@ -25,21 +23,4 @@ export interface Bindings {
   AUTH_PASSWORD: string;
   JWT_SECRET: string;
   GEMINI_API_KEY: string;
-}
-
-// Form data interfaces
-export interface AddMealRequest {
-  food_name: string;
-  date: string;
-  notes?: string;
-}
-
-export interface AddFoodRequest {
-  name: string;
-  notes?: string;
-}
-
-export interface EditFoodRequest {
-  name: string;
-  notes?: string;
 }
