@@ -56,7 +56,7 @@ export const HomePage = ({ foodNames, today }: HomePageProps) => {
                   </div>
                 ) : (
                   <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
-                    Keine Speisen verfügbar. <a href="/speisen" class="text-blue-500 hover:text-blue-600 underline">Fügen Sie zuerst Speisen hinzu</a>.
+                    Keine Speisen verfügbar. <a href="/dishes" class="text-blue-500 hover:text-blue-600 underline">Fügen Sie zuerst Speisen hinzu</a>.
                   </div>
                 )}
               </div>

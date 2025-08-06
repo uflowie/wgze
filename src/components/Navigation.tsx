@@ -6,8 +6,8 @@ export const Navigation = () => {
       <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center">
           <h1 class="text-xl font-bold">🍽️ WGZE</h1>
-          <button 
-            class="md:hidden flex flex-col gap-1 p-2" 
+          <button
+            class="md:hidden flex flex-col gap-1 p-2"
             onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
             aria-label="Toggle menu"
           >
@@ -17,15 +17,15 @@ export const Navigation = () => {
           </button>
           <div class="hidden md:flex gap-4">
             <a href="/" class="hover:bg-blue-700 px-3 py-2 rounded transition-colors">Home</a>
-            <a href="/speisen" class="hover:bg-blue-700 px-3 py-2 rounded transition-colors">Speisen</a>
-            <a href="/mahlzeiten" class="hover:bg-blue-700 px-3 py-2 rounded transition-colors">Mahlzeiten</a>
+            <a href="/dishes" class="hover:bg-blue-700 px-3 py-2 rounded transition-colors">Speisen</a>
+            <a href="/meals" class="hover:bg-blue-700 px-3 py-2 rounded transition-colors">Mahlzeiten</a>
             <a href="/ai-suggestions" class="hover:bg-blue-700 px-3 py-2 rounded transition-colors">🤖 AI</a>
           </div>
         </div>
         <div id="mobile-menu" class="hidden md:hidden mt-4 space-y-2">
           <a href="/" class="block hover:bg-blue-700 px-3 py-2 rounded transition-colors">Home</a>
-          <a href="/speisen" class="block hover:bg-blue-700 px-3 py-2 rounded transition-colors">Speisen</a>
-          <a href="/mahlzeiten" class="block hover:bg-blue-700 px-3 py-2 rounded transition-colors">Mahlzeiten</a>
+          <a href="/dishes" class="block hover:bg-blue-700 px-3 py-2 rounded transition-colors">Speisen</a>
+          <a href="/meals" class="block hover:bg-blue-700 px-3 py-2 rounded transition-colors">Mahlzeiten</a>
           <a href="/ai-suggestions" class="block hover:bg-blue-700 px-3 py-2 rounded transition-colors">🤖 AI</a>
         </div>
       </div>
